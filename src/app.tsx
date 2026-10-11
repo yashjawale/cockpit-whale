@@ -91,6 +91,8 @@ interface ApplicationState {
     /** Whether the docker CLI is installed, to tell "not installed" apart from
      * "service failed" in the failure empty state; null while unknown */
     dockerInstalled: boolean | null;
+    /** Whether connecting to the system daemon failed because admin access is unavailable */
+    systemAccessDenied: boolean;
 }
 
 /**
@@ -115,6 +117,7 @@ const Application = () => {
         version: '',
         selinuxAvailable: false,
         dockerInstalled: null,
+        systemAccessDenied: false,
     });
     // always-current snapshot of the state, so that the event handlers below
     // (which are registered once) never see a stale closure
@@ -667,14 +670,20 @@ const Application = () => {
                 return {
                     ...prevState,
                     users,
+                    ...(system ? { systemAccessDenied: false } : {}),
                     version: reply.Version as string,
                 };
             });
         } catch (err) {
+            const accessDenied = system && (err as DockerError).problem === 'access-denied';
             if (!system || (err as DockerError).problem !== 'access-denied')
                 console.warn("init uid", uid, "getInfo failed:", (err as Error).toString());
 
-            setState(prevState => ({ ...prevState, users: prevState.users.filter(u => u.uid !== uid) }));
+            setState(prevState => ({
+                ...prevState,
+                users: prevState.users.filter(u => u.uid !== uid),
+                ...(system ? { systemAccessDenied: accessDenied } : {}),
+            }));
             return;
         } finally {
             initInFlight.current.delete(uid);
@@ -820,6 +829,20 @@ const Application = () => {
     // service failed to connect. If the docker CLI is not even installed, point
     // the user to the installation instructions instead of the service page.
     if (state.users.length === 0) {
+        if (state.systemAccessDenied && superuser.allowed === false) {
+            return (
+                <Page className="pf-m-no-sidebar">
+                    <PageSection hasBodyWrapper={false}>
+                        <EmptyState headingLevel="h2" icon={ExclamationCircleIcon} titleText={_("Administrative access required")} variant={EmptyStateVariant.full}>
+                            <EmptyStateBody>
+                                {_("Cockpit is in limited access mode. Switch to administrative access to manage Docker on this system.")}
+                            </EmptyStateBody>
+                        </EmptyState>
+                    </PageSection>
+                </Page>
+            );
+        }
+
         if (state.dockerInstalled === false) {
             return (
                 <Page className="pf-m-no-sidebar">
