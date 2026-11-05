@@ -64,6 +64,11 @@
 
 /* Stacks: a compose project listing inside the containers card */
 .container-stack {
+    // Give the card a definite width within the column flex layout. With an
+    // auto width, the table's intrinsic size can make the card taller than its
+    // rendered rows, leaving empty space below the last container.
+    width: 100%;
+
     .pf-v6-c-card__title {
         padding: 0;
         font-weight: var(--pf-t--global--font--weight--body);
