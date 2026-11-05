@@ -157,6 +157,9 @@ $(TARFILE): $(DIST_TEST) $(SPEC) packaging/arch/PKGBUILD $(DEB_DIR)/rules
 		$(SPEC) packaging/arch/PKGBUILD $(DEB_DIR) dist/
 
 $(NODE_CACHE): $(NODE_MODULES_TEST)
+	# Some versions of `file` identify TrueType fonts as application/octet-stream.
+	# Monaco's codicon.ttf is architecture-independent, just like the existing woff exception.
+	sed -i "s/-e '\\\\.woff'; then/-e '\\\\.woff' -e '\\\\.ttf'; then/" tools/node-modules
 	tools/node-modules runtime-tar $(NODE_CACHE)
 
 node-cache: $(NODE_CACHE)
