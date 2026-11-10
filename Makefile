@@ -12,6 +12,7 @@ endif
 export TEST_OS
 TARFILE=$(RPM_NAME)-$(VERSION).tar.xz
 NODE_CACHE=$(RPM_NAME)-node-$(VERSION).tar.xz
+OBS_OUTPUT ?= $(CURDIR)/obs-sources
 SPEC=$(RPM_NAME).spec
 PREFIX ?= /usr/local
 APPSTREAMFILE=in.yashjawale.cockpit_whale.metainfo.xml
@@ -164,6 +165,10 @@ $(NODE_CACHE): $(NODE_MODULES_TEST)
 
 node-cache: $(NODE_CACHE)
 
+# Assemble RPM and Debian source descriptions for an OBS upload.
+obs-sources: $(TARFILE) $(NODE_CACHE)
+	packaging/obs/prepare-sources "$(TARFILE)" "$(NODE_CACHE)" "$(OBS_OUTPUT)"
+
 # convenience target for developers
 srpm: $(TARFILE) $(NODE_CACHE) $(SPEC)
 	rpmbuild -bs \
@@ -236,4 +241,4 @@ $(NODE_MODULES_TEST): package.json
 	for _ in `seq 3`; do timeout 10m env -u NODE_ENV npm install --ignore-scripts && exit 0; done; exit 1
 	env -u NODE_ENV npm prune
 
-.PHONY: all clean install devel-install devel-uninstall print-version dist node-cache rpm deb prepare-check check vm print-vm
+.PHONY: all clean install devel-install devel-uninstall print-version dist node-cache obs-sources rpm deb prepare-check check vm print-vm
