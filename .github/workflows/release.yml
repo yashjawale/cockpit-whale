@@ -1,11 +1,9 @@
-# Create a GitHub upstream release on every push of a version tag (e.g. "123"):
-# builds the source tarball, builds and attaches Debian and RPM packages, and
-# publishes them as release assets. See README.md.
+# Build all release artifacts on every push of a version tag (e.g. "123"),
+# then create the GitHub release only after every package build succeeds.
+# See README.md.
 #
-# Can also be triggered manually (Actions → release → Run workflow) with the
-# "Dry run" input enabled: the same artifacts are built and attached to the
-# workflow run, but nothing is created or uploaded to a GitHub release.
-# Build inputs are passed between jobs as workflow artifacts either way.
+# Can also be triggered manually (Actions → release → Run workflow). Manual
+# runs build and upload artifacts to the workflow run, but never publish.
 name: release
 on:
   push:
@@ -13,16 +11,6 @@ on:
       # this is a glob, not a regexp
       - '[0-9]*'
   workflow_dispatch:
-    inputs:
-      dry_run:
-        type: boolean
-        description: "Build the release artifacts but do NOT create or upload to a GitHub release"
-        default: true
-        required: false
-
-env:
-  # true when manually triggered with dry-run checked; false for tag pushes
-  DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == 'true' }}
 
 jobs:
   source:
@@ -30,74 +18,61 @@ jobs:
     container:
       image: ghcr.io/cockpit-project/tasks:latest
       options: --user root
-    permissions:
-      # create GitHub release (skipped in dry-run)
-      contents: write
-    env:
-      GH_TOKEN: ${{ github.token }}
     steps:
       - name: Clone repository
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      - name: Install gh
-        run: dnf install -y gh
-
       # https://github.blog/2022-04-12-git-security-vulnerability-announced/
       - name: Pacify git's permission check
-        run: git config --global --add safe.directory '*'
+        run: git config --global --add safe.directory /__w/cockpit-whale/cockpit-whale
 
-      - name: Workaround for https://github.com/actions/checkout/pull/697
-        if: env.DRY_RUN != 'true'
+      - name: Validate release tag
+        if: ${{ github.event_name == 'push' }}
         run: |
-          TAG_VERSION="$(git describe --tags)"
-          git fetch --force origin ${TAG_VERSION}:refs/tags/${TAG_VERSION}
+          set -euo pipefail
+          [[ "${GITHUB_REF_NAME}" =~ ^[0-9]+(\.[0-9]+)*$ ]] || {
+            echo "Release tags must be numeric (for example 1, 2, 3, or 1.2.3)" >&2
+            exit 1
+          }
+          tag_ref="refs/tags/${GITHUB_REF_NAME}"
+          [[ "$(git cat-file -t "$tag_ref")" == tag ]] || {
+            echo "Release tag ${GITHUB_REF_NAME} must be annotated; lightweight tags are unsupported" >&2
+            exit 1
+          }
+          [[ "$(git describe --exact-match --tags HEAD)" == "${GITHUB_REF_NAME}" ]] || {
+            echo "HEAD is not exactly tagged with ${GITHUB_REF_NAME}" >&2
+            exit 1
+          }
 
       - name: Build release
         run: |
           make dist
           make node-cache
+          if [[ "${GITHUB_EVENT_NAME}" == push ]]; then
+            test -f "cockpit-whale-${GITHUB_REF_NAME}.tar.xz" || {
+              echo "Release archive version does not match tag ${GITHUB_REF_NAME}" >&2
+              exit 1
+            }
+          fi
 
       - name: Upload source artifacts
         uses: actions/upload-artifact@v7
         with:
           name: release-assets
-          path: cockpit-whale-*.tar.xz
+          path: |
+            cockpit-whale-*.tar.xz
           if-no-files-found: error
           retention-days: 1
 
-      - name: Create a release
-        if: env.DRY_RUN != 'true'
-        run: |
-          set -x
-
-          TAG_VERSION="$(git describe --tags)"
-          git tag -l --format='%(contents:body)' ${TAG_VERSION} > release-note.txt
-
-          REPO_NAME="${GITHUB_REPOSITORY#*/}"
-          gh release create --title ${TAG_VERSION} --notes-file release-note.txt  \
-            ${TAG_VERSION} \
-            ${REPO_NAME}-${TAG_VERSION}.tar.xz \
-            ${REPO_NAME}-node-${TAG_VERSION}.tar.xz
-
-  # Build a Debian binary package from the release tarball and attach it to the
-  # same release. The tarball ships the pre-built dist/ bundle and the debian/
-  # directory, so this job needs no node toolchain.
+  # Build a Debian binary package from the release tarball. The tarball ships
+  # the pre-built dist/ bundle and debian/ packaging, so no Node toolchain is
+  # needed here.
   debian:
     runs-on: ubuntu-latest
     needs: source
-    permissions:
-      # upload the package to the release (skipped in dry-run)
-      contents: write
-    env:
-      GH_TOKEN: ${{ github.token }}
     steps:
-      - name: Clone repository
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
       - name: Install build dependencies
         run: |
           sudo apt-get update
@@ -114,7 +89,7 @@ jobs:
           cd cockpit-whale
           dpkg-buildpackage -b -us -uc
 
-      - name: Upload Debian package
+      - name: Upload Debian package artifact
         uses: actions/upload-artifact@v7
         with:
           name: debian-package
@@ -122,35 +97,16 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-      - name: Attach package to the release
-        if: env.DRY_RUN != 'true'
-        run: |
-          TAG_VERSION="$(git describe --tags)"
-          gh release upload "${TAG_VERSION}" ./*.deb --clobber
-
-  # Build an RPM from the release tarball and attach it to the same release.
-  # Built on CentOS Stream, where %rebuild_bundle is not defined, so the
-  # pre-built dist/ shipped in the tarball is used and no node toolchain is
-  # needed. The node cache tarball is still required as spec Source1.
+  # Build an RPM from the release tarball using its pre-built dist/ bundle.
   rpm:
     runs-on: ubuntu-latest
     needs: source
     container:
       image: quay.io/centos/centos:stream10
-    permissions:
-      # upload the package to the release (skipped in dry-run)
-      contents: write
-    env:
-      GH_TOKEN: ${{ github.token }}
     steps:
-      - name: Clone repository
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
       - name: Install build dependencies
         # gh is only in EPEL, not the CentOS Stream base repos
-        run: dnf install -y epel-release && dnf install -y rpm-build make gettext libappstream-glib git gh
+        run: dnf install -y epel-release && dnf install -y rpm-build make gettext libappstream-glib git
 
       - name: Download source artifacts
         uses: actions/download-artifact@v8
@@ -166,7 +122,7 @@ jobs:
           cd ~/rpmbuild
           rpmbuild -bb SPECS/cockpit-whale.spec
 
-      - name: Upload RPM package
+      - name: Upload RPM package artifact
         uses: actions/upload-artifact@v7
         with:
           name: rpm-package
@@ -174,6 +130,307 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-      - name: Attach package to the release
-        if: env.DRY_RUN != 'true'
-        run: gh release upload "${{ github.ref_name }}" ~/rpmbuild/RPMS/noarch/*.rpm --clobber --repo "${{ github.repository }}"
+  # Build the Arch package recipe from the same source tarball. AUR itself
+  # hosts recipes rather than binary packages; this verifies the recipe/build
+  # before allowing the GitHub release to publish.
+  arch:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:base-devel
+    needs: source
+    steps:
+      - name: Install build dependencies
+        run: pacman -Syu --noconfirm --needed gettext
+
+      - name: Download source artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: release-assets
+          path: release-assets
+
+      - name: Build Arch package
+        run: |
+          set -euo pipefail
+          tarball=$(find release-assets -maxdepth 1 -name 'cockpit-whale-[0-9]*.tar.xz' -print -quit)
+          test -n "${tarball}"
+          mkdir package
+          tar -xf "${tarball}" -C package
+          cd package/cockpit-whale
+          cp packaging/arch/PKGBUILD ./PKGBUILD
+          cp "${GITHUB_WORKSPACE}/${tarball}" .
+          checksum=$(sha256sum "$(basename "${tarball}")" | cut -d ' ' -f 1)
+          sed -i "s/sha256sums=('SKIP')/sha256sums=('${checksum}')/" PKGBUILD
+          useradd --create-home builder
+          chown -R builder:builder "${GITHUB_WORKSPACE}"
+          runuser -u builder -- makepkg --nodeps --noconfirm
+
+      - name: Upload Arch package artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: arch-package
+          path: package/cockpit-whale/*.pkg.tar.zst
+          if-no-files-found: error
+          retention-days: 1
+
+  # Upload the exact source artifacts from this run to OBS. workflow_dispatch
+  # runs only assemble and publish a review artifact; only a pushed version tag
+  # may write to OBS.
+  obs:
+    runs-on: ubuntu-latest
+    needs: source
+    permissions:
+      contents: read
+    env:
+      OBS_PROJECT: home:yashjawale
+      OBS_PACKAGE: cockpit-whale
+    steps:
+      - name: Checkout the release source
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0
+
+      - name: Download source artifacts from this run
+        uses: actions/download-artifact@v8
+        with:
+          name: release-assets
+          path: release-assets
+
+      - name: Install OBS upload tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y osc dpkg-dev xz-utils
+
+      - name: Prepare and validate OBS sources
+        run: |
+          set -euo pipefail
+          mapfile -t releases < <(find release-assets -maxdepth 1 -type f -name 'cockpit-whale-[0-9]*.tar.xz' ! -name '*-node-*' -print)
+          mapfile -t node_caches < <(find release-assets -maxdepth 1 -type f -name 'cockpit-whale-node-[0-9]*.tar.xz' -print)
+          [[ ${#releases[@]} -eq 1 && ${#node_caches[@]} -eq 1 ]] || {
+            echo "Expected one source and one Node cache tarball; found ${#releases[@]} source and ${#node_caches[@]} Node cache files" >&2
+            exit 1
+          }
+          release="${releases[0]}"
+          node_cache="${node_caches[0]}"
+          filename=$(basename "$release")
+          [[ "$filename" =~ ^cockpit-whale-([0-9]([A-Za-z0-9.+~]*[0-9A-Za-z])?)\.tar\.xz$ ]] || {
+            echo "Unexpected release source filename: $filename" >&2
+            exit 1
+          }
+          version="${BASH_REMATCH[1]}"
+          if [[ "${GITHUB_EVENT_NAME}" == push ]]; then
+            [[ "${GITHUB_REF_NAME}" =~ ^[0-9]+(\.[0-9]+)*$ ]] || {
+              echo "OBS publishing requires a numeric release tag (for example 1, 2, 3, or 1.2.3)" >&2
+              exit 1
+            }
+            [[ "${GITHUB_REF_NAME}" == "$version" ]] || {
+              echo "Tag ${GITHUB_REF_NAME} does not match archive version ${version}" >&2
+              exit 1
+            }
+          fi
+          mkdir -p "${RUNNER_TEMP}/obs-sources"
+          packaging/obs/prepare-sources "$release" "$node_cache" "${RUNNER_TEMP}/obs-sources"
+          grep -Fxq "Version: ${version}" "${RUNNER_TEMP}/obs-sources/cockpit-whale.spec"
+          test -f "${RUNNER_TEMP}/obs-sources/cockpit-whale_${version}-1.dsc"
+          test -f "${RUNNER_TEMP}/obs-sources/cockpit-whale_${version}-1.debian.tar.xz"
+          test -f "${RUNNER_TEMP}/obs-sources/cockpit-whale_${version}.orig.tar.xz"
+          ls -lh "${RUNNER_TEMP}/obs-sources"
+
+      - name: Save dry-run sources for review
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: obs-sources-dry-run
+          path: ${{ runner.temp }}/obs-sources/*
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload release sources to OBS
+        if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
+        env:
+          OBS_USER: ${{ secrets.OBS_USER }}
+          OBS_PASSWORD: ${{ secrets.OBS_PASSWORD }}
+        run: |
+          set -euo pipefail
+          : "${OBS_USER:?Add OBS_USER as a GitHub Actions secret}"
+          : "${OBS_PASSWORD:?Add OBS_PASSWORD as a GitHub Actions secret}"
+
+          config_dir=$(mktemp -d "${RUNNER_TEMP}/osc-config.XXXXXX")
+          trap 'rm -rf "$config_dir"' EXIT
+          export OSC_CONFIG="$config_dir/oscrc"
+          python3 - <<'PY'
+          import configparser
+          import os
+
+          api = "https://api.opensuse.org"
+          config = configparser.ConfigParser(interpolation=None)
+          config["general"] = {"apiurl": api}
+          config[api] = {"user": os.environ["OBS_USER"], "pass": os.environ["OBS_PASSWORD"]}
+          with open(os.environ["OSC_CONFIG"], "w", encoding="utf-8") as stream:
+              config.write(stream)
+          os.chmod(os.environ["OSC_CONFIG"], 0o600)
+          PY
+
+          osc_cmd() { osc --config "$OSC_CONFIG" "$@"; }
+          cd "$RUNNER_TEMP"
+          osc_cmd checkout "$OBS_PROJECT" "$OBS_PACKAGE"
+          package_dir="$RUNNER_TEMP/$OBS_PROJECT/$OBS_PACKAGE"
+          cd "$package_dir"
+
+          # Replace only artifacts produced by this release helper; leave
+          # unrelated maintainer files and history untouched.
+          declare -A keep=()
+          for file in "${RUNNER_TEMP}/obs-sources"/*; do
+            keep["$(basename "$file")"]=1
+          done
+          for file in \
+            cockpit-whale-[0-9]*.tar.xz \
+            cockpit-whale-node-[0-9]*.tar.xz \
+            cockpit-whale_[0-9]*.dsc \
+            cockpit-whale_[0-9]*.orig.tar.xz \
+            cockpit-whale_[0-9]*.debian.tar.xz; do
+            [[ -f "$file" ]] || continue
+            if [[ -n "${keep[$file]:-}" ]]; then
+              continue
+            fi
+            osc_cmd delete "$file"
+          done
+
+          cp -f "${RUNNER_TEMP}/obs-sources/"* .
+          git -C "$GITHUB_WORKSPACE" tag -l --format='%(contents:body)' \
+            "${GITHUB_REF_NAME}" > "$RUNNER_TEMP/release-notes.txt"
+          python3 "$GITHUB_WORKSPACE/packaging/obs/update-changes.py" \
+            --file cockpit-whale.changes \
+            --tag "${GITHUB_REF_NAME}" \
+            --notes "$RUNNER_TEMP/release-notes.txt"
+
+          status=$(osc_cmd status)
+          while read -r state file; do
+            [[ "$state" == '?' ]] && osc_cmd add "$file"
+          done <<< "$status"
+          status=$(osc_cmd status)
+          if [[ -z "$status" ]]; then
+            echo "OBS already contains this release; nothing to commit."
+            exit 0
+          fi
+          printf '%s\n' "$status"
+          osc_cmd commit -m "Update to ${GITHUB_REF_NAME}"
+
+  # Upload signed source packages to the shared Launchpad PPA. Launchpad builds
+  # the binary packages for each Ubuntu series; this job only runs for tags.
+  ppa:
+    runs-on: ubuntu-latest
+    needs: source
+    if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        ubuntu-series: [jammy, noble, resolute, stonking]
+    steps:
+      - name: Checkout tagged source for packaging helper
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Install packaging and upload tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential devscripts dpkg-dev dput gettext debhelper xz-utils
+
+      - name: Download release source artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: release-assets
+
+      - name: Prepare and sign source package
+        env:
+          PPA_SIGNING_KEY_ASC: ${{ secrets.PPA_SIGNING_KEY_ASC }}
+          PPA_SIGNING_FINGERPRINT: ${{ secrets.PPA_SIGNING_FINGERPRINT }}
+          PPA_SIGNING_PASSPHRASE: ${{ secrets.PPA_SIGNING_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          [[ "${GITHUB_REF_NAME}" =~ ^[0-9]+(\.[0-9]+)*$ ]] || {
+            echo "PPA publishing requires a numeric release tag (for example 1, 2, 3, or 1.2.3)" >&2
+            exit 1
+          }
+          : "${PPA_SIGNING_KEY_ASC:?Set PPA_SIGNING_KEY_ASC in repository Actions secrets}"
+          : "${PPA_SIGNING_FINGERPRINT:?Set PPA_SIGNING_FINGERPRINT in repository Actions secrets}"
+          : "${PPA_SIGNING_PASSPHRASE:?Set PPA_SIGNING_PASSPHRASE in repository Actions secrets}"
+          export GNUPGHOME="${RUNNER_TEMP}/gnupg"
+          install -d -m 0700 "$GNUPGHOME"
+          trap 'rm -rf "$GNUPGHOME"' EXIT
+          printf '%s' "$PPA_SIGNING_KEY_ASC" | gpg --batch --import
+          # Unlock the dedicated key into the ephemeral job's gpg-agent cache;
+          # the passphrase is sent over stdin, not exposed as a process argument.
+          printf '%s' "$PPA_SIGNING_PASSPHRASE" | \
+            gpg --batch --pinentry-mode loopback --passphrase-fd 0 \
+              --local-user "$PPA_SIGNING_FINGERPRINT" --detach-sign \
+              --output "$GNUPGHOME/unlock.sig" /dev/null
+          work="${RUNNER_TEMP}/ppa-${{ matrix.ubuntu-series }}"
+          mkdir -p "$work"
+          mapfile -t source_tarballs < <(find . -maxdepth 1 -type f \
+            -name 'cockpit-whale-[0-9]*.tar.xz' -print)
+          [[ ${#source_tarballs[@]} -eq 1 ]] || {
+            echo "Expected exactly one versioned release tarball; found ${#source_tarballs[@]}" >&2
+            exit 1
+          }
+          filename=$(basename "${source_tarballs[0]}")
+          [[ "$filename" =~ ^cockpit-whale-([0-9]([A-Za-z0-9.+~]*[0-9A-Za-z])?)\.tar\.xz$ && \
+             "${BASH_REMATCH[1]}" == "${GITHUB_REF_NAME}" ]] || {
+            echo "Release archive ${filename} does not match tag ${GITHUB_REF_NAME}" >&2
+            exit 1
+          }
+          packaging/debian/prepare-ppa-source "${source_tarballs[0]}" \
+            "${{ matrix.ubuntu-series }}" "$work"
+          cd "$work"/cockpit-whale-*
+          dpkg-buildpackage -S -sa -k"${PPA_SIGNING_FINGERPRINT}"
+          changes=$(find .. -maxdepth 1 -name '*_source.changes' -print -quit)
+          test -n "$changes"
+          dput "ppa:yashjawale/cockpit-plugins" "$changes"
+
+  # This publishing gate waits for all package jobs. Only this job can write
+  # release assets; a failed/cancelled build cannot leave a partial release.
+  publish:
+    runs-on: ubuntu-latest
+    needs: [source, debian, rpm, arch]
+    if: ${{ !cancelled() && needs.source.result == 'success' && needs.debian.result == 'success' && needs.rpm.result == 'success' && needs.arch.result == 'success' && github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
+    permissions:
+      contents: write
+    steps:
+      - name: Download source artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: release-assets
+          path: release-assets
+
+      - name: Download Debian package
+        uses: actions/download-artifact@v8
+        with:
+          name: debian-package
+          path: release-assets
+
+      - name: Download RPM package
+        uses: actions/download-artifact@v8
+        with:
+          name: rpm-package
+          path: release-assets
+
+      - name: Download Arch package
+        uses: actions/download-artifact@v8
+        with:
+          name: arch-package
+          path: release-assets
+
+      - name: Create release and upload artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          gh release create "${tag}" release-assets/* \
+            --title "${tag}" \
+            --generate-notes \
+            --repo "${GITHUB_REPOSITORY}"
+
+  # Manual dry runs intentionally stop after building and uploading workflow
+  # artifacts. External distribution publishers can depend on `publish` later.
