@@ -14,11 +14,9 @@ srpm_build_deps:
 actions:
   post-upstream-clone:
     - make cockpit-whale.spec
-    # replace Source1 manually, as create-archive: can't handle multiple tarballs
     - make node-cache
     - sh -c 'sed -i "/^Source1:/ s/https:.*/$(ls *-node*.tar.xz)/" cockpit-*.spec'
   create-archive: make dist
-  # cockpit-whale.git has no release tags; your project can drop this once you have a release
   get-current-version: make print-version
 
 jobs:
@@ -47,18 +45,29 @@ jobs:
     trigger: pull_request
     targets: *test_targets
 
-  # Build releases in COPR: https://packit.dev/docs/configuration/#copr_build
-  # The COPR owner and project must exist; adjust them to your namespace.
+  - job: copr_build
+    trigger: commit
+    branch: "^main$"
+    targets: *test_targets
+
+  # Build published releases in the shared cockpit-plugins COPR project.
   - job: copr_build
     trigger: release
-    owner: yashjawale
-    project: cockpit-whale
-    preserve_project: True
+    owner: yash
+    project: cockpit-plugins
     targets:
       - fedora-43
+      - fedora-43-aarch64
       - fedora-44
+      - fedora-44-aarch64
+      - fedora-45
+      - fedora-45-aarch64
       - fedora-rawhide
-      - centos-stream-9-x86_64
+      - fedora-rawhide-aarch64
+      - centos-stream-9
+      - centos-stream-9-aarch64
+      - centos-stream-10
+      - centos-stream-10-aarch64
 
   # Build releases in Fedora: https://packit.dev/docs/configuration/#propose_downstream
   # These require Fedora packager rights and are left disabled for now.
