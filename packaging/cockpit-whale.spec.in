@@ -72,6 +72,9 @@ appstream-util validate-relax --nonet %{buildroot}/%{_datadir}/metainfo/*
 %files
 %doc README.md
 %license LICENSE dist/index.js.LEGAL.txt
+# own the parent directory: not every distribution's cockpit-bridge package
+# ships it, and openSUSE's post-build filelist check rejects unowned directories
+%dir %{_datadir}/cockpit
 %{_datadir}/cockpit/*
 %{_datadir}/metainfo/*
 
