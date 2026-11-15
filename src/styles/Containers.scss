@@ -173,7 +173,7 @@
     }
 }
 
-@media (max-width: 767px) {
+@media (width <= 767px) {
     /* Remove framework footer padding so the first card matches card-to-card spacing. */
     .content-filter {
         padding-block-end: 0;
@@ -436,7 +436,7 @@
                 padding: 0;
                 margin: -1px;
                 overflow: hidden;
-                clip: rect(0, 0, 0, 0);
+                clip-path: inset(50%);
                 white-space: nowrap;
                 border: 0;
             }
@@ -453,7 +453,7 @@
     }
 }
 
-@media (max-width: 360px) {
+@media (width <= 360px) {
     /* Narrow button padding just enough for both create buttons and the kebab to fit. */
     #containers-containers > .pf-v6-c-card__header .container-create-actions > .pf-v6-l-flex > button {
         padding-inline: var(--pf-t--global--spacer--sm);
