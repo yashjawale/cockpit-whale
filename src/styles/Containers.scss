@@ -27,6 +27,29 @@
     white-space: normal;
 }
 
+.ct-containers-listing {
+    width: 100%;
+    min-width: 0;
+
+    .pf-v6-c-table__tr {
+        min-width: 0;
+    }
+
+    .container-block,
+    .container-name {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .container-block > .ignore-pixels {
+        min-width: 0;
+    }
+
+    .container-name {
+        flex: 1 1 auto;
+    }
+}
+
 // HACK: PF should offer that: https://github.com/patternfly/patternfly/issues/6572
 .ct-numeric-column {
     text-align: end;
@@ -88,30 +111,6 @@
         }
     }
 
-    .ct-containers-listing {
-        width: 100%;
-        min-width: 0;
-        grid-template-columns: minmax(0, 1fr);
-
-        .pf-v6-c-table__tr {
-            min-width: 0;
-        }
-
-        .container-block,
-        .container-name {
-            min-width: 0;
-            max-width: 100%;
-        }
-
-        .container-block > .ignore-pixels {
-            min-width: 0;
-        }
-
-        .container-name {
-            flex: 1 1 auto;
-        }
-    }
-
     .pod-details-button {
         padding-inline: 0;
         margin-inline-end: var(--pf-t--global--spacer--md);
@@ -148,6 +147,27 @@
 }
 
 @media (max-width: 767px) {
+    .ct-containers-listing {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .ct-containers-listing.pf-m-grid-md .pf-v6-c-table__tr:not(.pf-v6-c-table__expandable-row) {
+        grid-template-columns: minmax(0, 1fr) auto;
+        padding-inline-end: 0;
+    }
+
+    .ct-containers-listing.pf-m-grid-md .pf-v6-c-table__toggle,
+    .ct-containers-listing.pf-m-grid-md .pf-v6-c-table__action {
+        grid-column: 2 / -1;
+        justify-self: end;
+    }
+
+    .ct-containers-listing.pf-m-grid-md .pf-v6-c-table__action {
+        display: flex;
+        justify-content: flex-end;
+        align-items: flex-start;
+    }
+
     .containers-containers .containers-containers-toolbarcontent {
         .create-action-desktop {
             display: none;
@@ -267,11 +287,6 @@
             }
         }
 
-        .ct-containers-listing .pf-v6-c-table__action {
-            display: flex;
-            justify-content: flex-end;
-            align-items: flex-start;
-        }
     }
 }
 
