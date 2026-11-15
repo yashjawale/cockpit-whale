@@ -11,7 +11,7 @@ import { Button } from "@patternfly/react-core/dist/esm/components/Button";
 import { Card, CardBody, CardHeader, CardTitle } from "@patternfly/react-core/dist/esm/components/Card";
 import { Content, ContentVariants } from "@patternfly/react-core/dist/esm/components/Content";
 import { Divider } from "@patternfly/react-core/dist/esm/components/Divider";
-import { DropdownItem } from '@patternfly/react-core/dist/esm/components/Dropdown/index.js';
+import { Dropdown, DropdownItem, DropdownList } from '@patternfly/react-core/dist/esm/components/Dropdown';
 import { FormSelect, FormSelectOption } from "@patternfly/react-core/dist/esm/components/FormSelect";
 import { LabelGroup } from "@patternfly/react-core/dist/esm/components/Label";
 import {
@@ -20,6 +20,7 @@ import {
 import { Toolbar, ToolbarContent, ToolbarItem } from "@patternfly/react-core/dist/esm/components/Toolbar";
 import { Flex } from "@patternfly/react-core/dist/esm/layouts/Flex";
 import { SortByDirection } from '@patternfly/react-table';
+import { PlusIcon } from '@patternfly/react-icons';
 import { KebabDropdown } from "cockpit-components-dropdown.jsx";
 import { useDialogs } from "dialogs.jsx";
 
@@ -145,6 +146,42 @@ const ContainerOverActions = ({ handlePruneUnusedContainers, handleStartAllConta
     ];
 
     return <KebabDropdown toggleButtonId="containers-actions-dropdown" position="right" dropdownItems={actions} />;
+};
+
+/**
+ * Compact mobile action menu for creating a stack or container.
+ */
+const MobileCreateMenu = ({ onCreateStack, onCreateContainer, isContainerDisabled }: {
+    onCreateStack: () => void,
+    onCreateContainer: () => void,
+    isContainerDisabled: boolean,
+}) => {
+    const [isOpen, setIsOpen] = useState(false);
+
+    return (
+        <Dropdown
+            isOpen={isOpen}
+            onOpenChange={setIsOpen}
+            toggle={toggleRef => (
+                <Button
+                    ref={toggleRef}
+                    variant="plain"
+                    aria-label={_("Create stack or container")}
+                    aria-haspopup="menu"
+                    aria-expanded={isOpen}
+                    icon={<PlusIcon />}
+                    onClick={() => setIsOpen(!isOpen)}
+                />
+            )}
+        >
+            <DropdownList>
+                <DropdownItem component="button" onClick={onCreateStack}>{_("Create stack")}</DropdownItem>
+                <DropdownItem component="button" onClick={onCreateContainer} isDisabled={isContainerDisabled}>
+                    {_("Create container")}
+                </DropdownItem>
+            </DropdownList>
+        </Dropdown>
+    );
 };
 
 /**
@@ -700,7 +737,7 @@ const Containers = ({ containers, containersStats, images, filter, handleFilterC
         cockpit.assert(user, `User not found for container uid ${container.uid}`);
 
         const columns: ContainerRowColumn[] = [
-            { title: info_block, sortKey: container.Name ?? container.Id },
+            { title: info_block, props: { className: "container-name-cell" }, sortKey: container.Name ?? container.Id },
             {
                 title: (container.uid === 0) ? _("system") : <div><span className="ct-grey-text">{_("user:")} </span>{user.name}</div>,
                 props: { modifier: "nowrap" },
@@ -1001,12 +1038,12 @@ const Containers = ({ containers, containersStats, images, filter, handleFilterC
                         </FormSelect>
                     </ToolbarItem>
                     <Divider orientation={{ default: "vertical" }} />
-                    <ToolbarItem>
+                    <ToolbarItem className="create-action-desktop">
                         <Button variant="secondary" key="create-new-stack-action" id="containers-containers-create-stack-btn" onClick={() => Dialogs.show(<CreateStackModal onStackCreated={refreshStacks} />)}>
                             {_("Create stack")}
                         </Button>
                     </ToolbarItem>
-                    <ToolbarItem>
+                    <ToolbarItem className="create-action-desktop">
                         <Button
                             variant="primary"
                             key="get-new-image-action"
@@ -1016,6 +1053,13 @@ const Containers = ({ containers, containersStats, images, filter, handleFilterC
                         >
                             {_("Create container")}
                         </Button>
+                    </ToolbarItem>
+                    <ToolbarItem className="create-action-mobile">
+                        <MobileCreateMenu
+                            onCreateStack={() => Dialogs.show(<CreateStackModal onStackCreated={refreshStacks} />)}
+                            onCreateContainer={() => createContainer()}
+                            isContainerDisabled={localImages === null}
+                        />
                     </ToolbarItem>
                     <ToolbarItem>
                         <ContainerOverActions

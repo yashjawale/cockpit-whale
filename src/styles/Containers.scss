@@ -21,6 +21,10 @@
 .container-name {
     font-size: var(--pf-t--global--font--size--lg);
     font-weight: 400;
+    min-width: 0;
+    word-break: normal;
+    overflow-wrap: anywhere;
+    white-space: normal;
 }
 
 // HACK: PF should offer that: https://github.com/patternfly/patternfly/issues/6572
@@ -68,6 +72,7 @@
     // auto width, the table's intrinsic size can make the card taller than its
     // rendered rows, leaving empty space below the last container.
     width: 100%;
+    min-width: 0;
 
     .pf-v6-c-card__title {
         padding: 0;
@@ -83,13 +88,27 @@
         }
     }
 
-    > .pf-v6-c-card__header {
-        &:not(:last-child) {
-            padding-block-end: var(--pf-t--global--spacer--sm);
+    .ct-containers-listing {
+        width: 100%;
+        min-width: 0;
+        grid-template-columns: minmax(0, 1fr);
+
+        .pf-v6-c-table__tr {
+            min-width: 0;
         }
 
-        > .pf-v6-c-card__title > .pf-l-flex {
-            row-gap: var(--pf-t--global--spacer--sm);
+        .container-block,
+        .container-name {
+            min-width: 0;
+            max-width: 100%;
+        }
+
+        .container-block > .ignore-pixels {
+            min-width: 0;
+        }
+
+        .container-name {
+            flex: 1 1 auto;
         }
     }
 
@@ -120,6 +139,134 @@
         > svg {
             align-self: center;
         }
+    }
+}
+
+/* The compact create menu replaces the two wide buttons only on narrow screens. */
+.containers-containers-toolbarcontent .create-action-mobile {
+    display: none;
+}
+
+@media (max-width: 767px) {
+    .containers-containers .containers-containers-toolbarcontent {
+        .create-action-desktop {
+            display: none;
+        }
+
+        .create-action-mobile {
+            display: flex;
+        }
+    }
+
+    .container-stack {
+        > .pf-v6-c-card__header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+
+            &:not(:last-child) {
+                padding-block-end: var(--pf-t--global--spacer--sm);
+            }
+
+            > .pf-v6-c-card__header-main {
+                flex: 1 1 auto;
+                min-width: 0;
+                order: 0;
+            }
+
+            > .panel-actions {
+                position: relative;
+                order: 1;
+                flex: 1 1 100%;
+                min-width: 0;
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                padding-inline-end: calc(2.5rem + var(--pf-t--global--spacer--sm));
+
+                > .pf-v6-c-menu-toggle {
+                    position: absolute;
+                    inset-inline-end: 0;
+                    top: 0;
+                }
+            }
+
+            .pf-v6-c-card__title > .pf-l-flex {
+                row-gap: var(--pf-t--global--spacer--sm);
+                flex-wrap: wrap;
+            }
+        }
+
+        > .pf-v6-c-card__header > .panel-actions {
+            display: grid;
+            grid-template-columns: max-content minmax(0, 1fr) 2.5rem;
+            column-gap: var(--pf-t--global--spacer--sm);
+            row-gap: var(--pf-t--global--spacer--sm);
+
+            > .pf-v6-c-badge {
+                grid-column: 1;
+                grid-row: 1;
+                align-self: start;
+                justify-self: start;
+            }
+
+            > .pod-stat:first-of-type {
+                grid-column: 2;
+                grid-row: 1;
+                min-width: 0;
+            }
+
+            > .pod-stat:nth-of-type(2) {
+                grid-column: 2;
+                grid-row: 2;
+                min-width: 0;
+            }
+
+            .pod-details-ports-btn {
+                grid-column: 1;
+                grid-row: 2;
+                justify-self: start;
+            }
+        }
+
+        .pod-stat {
+            display: grid;
+            grid-template-columns: max-content minmax(0, 1fr);
+            align-items: center;
+            min-width: 0;
+            max-width: 100%;
+            column-gap: var(--pf-t--global--spacer--xs);
+
+            svg {
+                display: none;
+            }
+
+            > .pf-v6-c-content--p.pf-v6-u-hidden-on-sm {
+                grid-column: 1;
+                grid-row: 1;
+                white-space: nowrap;
+            }
+
+            > .pod-cpu,
+            > .pod-memory {
+                grid-column: 2;
+                grid-row: 1;
+                text-align: end;
+                white-space: nowrap;
+            }
+        }
+
+        .ct-containers-listing .pf-v6-c-table__action {
+            display: flex;
+            justify-content: flex-end;
+            align-items: flex-start;
+        }
+    }
+}
+
+@media (max-width: 360px) {
+    .ct-containers-listing.pf-m-grid-md .pf-v6-c-table__td.container-name-cell {
+        display: block;
     }
 }
 
