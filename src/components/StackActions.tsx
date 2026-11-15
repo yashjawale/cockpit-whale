@@ -12,7 +12,7 @@ import { Badge } from "@patternfly/react-core/dist/esm/components/Badge";
 import { Button } from "@patternfly/react-core/dist/esm/components/Button";
 import { Content, ContentVariants } from "@patternfly/react-core/dist/esm/components/Content";
 import { Divider } from "@patternfly/react-core/dist/esm/components/Divider";
-import { DropdownItem } from '@patternfly/react-core/dist/esm/components/Dropdown/index.js';
+import { DropdownItem } from '@patternfly/react-core/dist/esm/components/Dropdown';
 import { Flex } from "@patternfly/react-core/dist/esm/layouts/Flex";
 import { List, ListItem } from "@patternfly/react-core/dist/esm/components/List";
 import { Popover } from "@patternfly/react-core/dist/esm/components/Popover";

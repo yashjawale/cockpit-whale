@@ -709,8 +709,8 @@ const Containers = ({ containers, containersStats, images, filter, handleFilterC
                 props: { modifier: "nowrap" },
                 sortKey: container.key,
             },
-            { title: proc, props: { modifier: "nowrap", className: "container-cpu-cell" }, sortKey: containerStats ? dockerStatsToView(containerStats).CPU ?? -1 : -1 },
-            { title: mem, props: { modifier: "nowrap", className: "container-memory-cell" }, sortKey: containerStats ? dockerStatsToView(containerStats).MemUsage ?? -1 : -1 },
+            { title: proc, props: { modifier: "nowrap" }, sortKey: containerStats ? dockerStatsToView(containerStats).CPU ?? -1 : -1 },
+            { title: mem, props: { modifier: "nowrap" }, sortKey: containerStats ? dockerStatsToView(containerStats).MemUsage ?? -1 : -1 },
             { title: <LabelGroup isVertical>{state}</LabelGroup>, sortKey: containerState },
         ];
 
@@ -1005,7 +1005,7 @@ const Containers = ({ containers, containersStats, images, filter, handleFilterC
                     </ToolbarItem>
                     <Divider className="containers-toolbar-divider" orientation={{ default: "vertical" }} />
                     <ToolbarItem className="container-create-actions">
-                        <Flex direction={{ default: 'row' }} flexWrap={{ default: 'nowrap' }} spaceItems={{ default: 'spaceItemsXs' }}>
+                        <Flex direction={{ default: 'row' }} flexWrap={{ default: 'nowrap' }} spaceItems={{ default: 'spaceItemsSm' }}>
                             <Button variant="secondary" key="create-new-stack-action" id="containers-containers-create-stack-btn" onClick={() => Dialogs.show(<CreateStackModal onStackCreated={refreshStacks} />)}>
                                 {_("Create stack")}
                             </Button>

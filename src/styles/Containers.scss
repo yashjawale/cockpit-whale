@@ -21,22 +21,21 @@
 .container-name {
     font-size: var(--pf-t--global--font--size--lg);
     font-weight: 400;
-    min-width: 0;
-    word-break: normal;
-    overflow-wrap: anywhere;
-    white-space: normal;
 }
 
+/* Keep desktop memory values stacked; mobile overrides the direction below. */
 .container-memory-primary {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
 }
 
+/* The inline separator is only shown in the compact mobile memory value. */
 .container-memory-separator {
     display: none;
 }
 
+/* Let table rows and their content shrink within narrow cards without overflow. */
 .ct-containers-listing {
     width: 100%;
     min-width: 0;
@@ -57,9 +56,11 @@
 
     .container-name {
         flex: 1 1 auto;
+        overflow-wrap: anywhere;
     }
 }
 
+/* Flatten summary wrappers so PatternFly can lay out badges, stats, and actions. */
 .stack-summary,
 .stack-summary-heading,
 .stack-summary-stats {
@@ -111,10 +112,22 @@
     // auto width, the table's intrinsic size can make the card taller than its
     // rendered rows, leaving empty space below the last container.
     width: 100%;
+    // Allow stack cards to shrink with the containing mobile column.
     min-width: 0;
 
+    // Match the stack type label to the link color on desktop and mobile.
     .stack-type {
         color: var(--pf-t--global--text--color--link--default);
+    }
+
+    > .pf-v6-c-card__header {
+        &:not(:last-child) {
+            padding-block-end: var(--pf-t--global--spacer--sm);
+        }
+
+        > .pf-v6-c-card__title > .pf-l-flex {
+            row-gap: var(--pf-t--global--spacer--sm);
+        }
     }
 
     .pf-v6-c-card__title {
@@ -162,6 +175,7 @@
 }
 
 @media (max-width: 767px) {
+    /* Remove framework footer padding so the first card matches card-to-card spacing. */
     .content-filter {
         padding-block-end: 0;
 
@@ -170,6 +184,7 @@
         }
     }
 
+    /* Keep the owner label and selector on one row and give search the full card-content width. */
     .content-filter .pf-v6-c-toolbar__content-section {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
@@ -201,10 +216,12 @@
         }
     }
 
+    /* Constrain responsive tables to the available card width. */
     .ct-containers-listing {
         grid-template-columns: minmax(0, 1fr);
     }
 
+    /* Put the row toggle and kebab together at the right edge of mobile rows. */
     .ct-containers-listing.pf-m-grid-md .pf-v6-c-table__tr:not(.pf-v6-c-table__expandable-row) {
         grid-template-columns: minmax(0, 1fr) auto;
         padding-inline-end: 0;
@@ -222,11 +239,13 @@
         align-items: flex-start;
     }
 
+    /* Keep numeric values readable from the left in stacked mobile table rows. */
     .ct-containers-listing .container-cpu-value,
     .ct-containers-listing .container-memory-value {
         text-align: start;
     }
 
+    /* Keep percentage and subdued byte value on one mobile memory line. */
     .container-memory-primary {
         flex-direction: row;
         align-items: baseline;
@@ -242,10 +261,7 @@
         display: inline;
     }
 
-    .containers-containers .containers-containers-toolbarcontent {
-        display: contents;
-    }
-
+    /* Align the section title and Show filter above the create and bulk-action row. */
     #containers-containers > .pf-v6-c-card__header {
         display: grid;
         grid-template-columns: minmax(0, 1fr) max-content;
@@ -313,12 +329,14 @@
         }
     }
 
+    /* Keep the stack label and its action summary compact on mobile. */
     .container-stack {
         .stack-type {
             margin-inline-start: auto;
             text-align: end;
         }
 
+        /* Reserve a right-side action column while keeping stack stats together. */
         > .pf-v6-c-card__header {
             display: flex;
             flex-wrap: wrap;
@@ -364,6 +382,7 @@
             }
         }
 
+        /* Center stack stats between the status badge and kebab. */
         > .pf-v6-c-card__header > .panel-actions {
             .stack-summary-heading > .pf-v6-c-badge {
                 grid-column: 1;
@@ -402,6 +421,7 @@
             }
         }
 
+        /* Preserve icons while keeping each metric's label available to assistive tech. */
         .pod-stat {
             display: grid;
             grid-template-columns: max-content minmax(0, 1fr);
@@ -441,10 +461,12 @@
 }
 
 @media (max-width: 360px) {
+    /* Narrow button padding just enough for both create buttons and the kebab to fit. */
     #containers-containers > .pf-v6-c-card__header .container-create-actions > .pf-v6-l-flex > button {
         padding-inline: var(--pf-t--global--spacer--sm);
     }
 
+    /* Let the name cell use the full row width at the narrowest breakpoint. */
     .ct-containers-listing.pf-m-grid-md .pf-v6-c-table__td.container-name-cell {
         display: block;
     }

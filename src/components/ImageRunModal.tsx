@@ -19,7 +19,7 @@ import {
 import { NumberInput } from "@patternfly/react-core/dist/esm/components/NumberInput";
 import { Popover } from "@patternfly/react-core/dist/esm/components/Popover";
 import { Radio } from "@patternfly/react-core/dist/esm/components/Radio";
-import { Spinner } from "@patternfly/react-core/dist/esm/components/Spinner/index.js";
+import { Spinner } from "@patternfly/react-core/dist/esm/components/Spinner";
 import { Tab, TabTitleText, Tabs } from "@patternfly/react-core/dist/esm/components/Tabs";
 import { TextInput } from "@patternfly/react-core/dist/esm/components/TextInput";
 import { ToggleGroup, ToggleGroupItem } from "@patternfly/react-core/dist/esm/components/ToggleGroup";
