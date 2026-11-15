@@ -1114,7 +1114,7 @@ const Containers = ({ containers, containersStats, images, filter, handleFilterC
                                                 <CardTitle>
                                                     <Flex justifyContent={{ default: 'justifyContentFlexStart' }}>
                                                         <h3 className='stack-name'>{section}</h3>
-                                                        <span>{_("stack")}</span>
+                                                        <span className="stack-type">{_("stack")}</span>
                                                     </Flex>
                                                 </CardTitle>
                                             </CardHeader>

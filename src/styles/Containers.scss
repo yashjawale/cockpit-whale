@@ -159,6 +159,12 @@
     }
 
     .container-stack {
+        .stack-type {
+            color: var(--pf-t--global--text--color--link--default);
+            margin-inline-start: auto;
+            text-align: end;
+        }
+
         > .pf-v6-c-card__header {
             display: flex;
             flex-wrap: wrap;
@@ -172,6 +178,11 @@
                 flex: 1 1 auto;
                 min-width: 0;
                 order: 0;
+
+                > .pf-v6-c-card__title {
+                    flex: 1 1 auto;
+                    min-width: 0;
+                }
             }
 
             > .panel-actions {
