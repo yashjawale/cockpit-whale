@@ -113,6 +113,10 @@
     width: 100%;
     min-width: 0;
 
+    .stack-type {
+        color: var(--pf-t--global--text--color--link--default);
+    }
+
     .pf-v6-c-card__title {
         padding: 0;
         font-weight: var(--pf-t--global--font--weight--body);
@@ -311,7 +315,6 @@
 
     .container-stack {
         .stack-type {
-            color: var(--pf-t--global--text--color--link--default);
             margin-inline-start: auto;
             text-align: end;
         }
