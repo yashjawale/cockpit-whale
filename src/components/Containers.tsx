@@ -11,7 +11,7 @@ import { Button } from "@patternfly/react-core/dist/esm/components/Button";
 import { Card, CardBody, CardHeader, CardTitle } from "@patternfly/react-core/dist/esm/components/Card";
 import { Content, ContentVariants } from "@patternfly/react-core/dist/esm/components/Content";
 import { Divider } from "@patternfly/react-core/dist/esm/components/Divider";
-import { Dropdown, DropdownItem, DropdownList } from '@patternfly/react-core/dist/esm/components/Dropdown';
+import { DropdownItem } from '@patternfly/react-core/dist/esm/components/Dropdown';
 import { FormSelect, FormSelectOption } from "@patternfly/react-core/dist/esm/components/FormSelect";
 import { LabelGroup } from "@patternfly/react-core/dist/esm/components/Label";
 import {
@@ -20,7 +20,6 @@ import {
 import { Toolbar, ToolbarContent, ToolbarItem } from "@patternfly/react-core/dist/esm/components/Toolbar";
 import { Flex } from "@patternfly/react-core/dist/esm/layouts/Flex";
 import { SortByDirection } from '@patternfly/react-table';
-import { PlusIcon } from '@patternfly/react-icons';
 import { KebabDropdown } from "cockpit-components-dropdown.jsx";
 import { useDialogs } from "dialogs.jsx";
 
@@ -146,42 +145,6 @@ const ContainerOverActions = ({ handlePruneUnusedContainers, handleStartAllConta
     ];
 
     return <KebabDropdown toggleButtonId="containers-actions-dropdown" position="right" dropdownItems={actions} />;
-};
-
-/**
- * Compact mobile action menu for creating a stack or container.
- */
-const MobileCreateMenu = ({ onCreateStack, onCreateContainer, isContainerDisabled }: {
-    onCreateStack: () => void,
-    onCreateContainer: () => void,
-    isContainerDisabled: boolean,
-}) => {
-    const [isOpen, setIsOpen] = useState(false);
-
-    return (
-        <Dropdown
-            isOpen={isOpen}
-            onOpenChange={setIsOpen}
-            toggle={toggleRef => (
-                <Button
-                    ref={toggleRef}
-                    variant="plain"
-                    aria-label={_("Create stack or container")}
-                    aria-haspopup="menu"
-                    aria-expanded={isOpen}
-                    icon={<PlusIcon />}
-                    onClick={() => setIsOpen(!isOpen)}
-                />
-            )}
-        >
-            <DropdownList>
-                <DropdownItem component="button" onClick={onCreateStack}>{_("Create stack")}</DropdownItem>
-                <DropdownItem component="button" onClick={onCreateContainer} isDisabled={isContainerDisabled}>
-                    {_("Create container")}
-                </DropdownItem>
-            </DropdownList>
-        </Dropdown>
-    );
 };
 
 /**
@@ -1031,40 +994,33 @@ const Containers = ({ containers, containersStats, images, filter, handleFilterC
         const filterRunning = (
             <Toolbar>
                 <ToolbarContent className="containers-containers-toolbarcontent">
-                    <ToolbarItem alignSelf="center" variant="label" htmlFor="containers-containers-filter">
+                    <ToolbarItem className="containers-show-label" alignSelf="center" variant="label" htmlFor="containers-containers-filter">
                         {_("Show")}
                     </ToolbarItem>
-                    <ToolbarItem>
-                        <FormSelect id="containers-containers-filter" value={filter} onChange={(_, value) => handleFilterChange(value as "all" | "running")}>
+                    <ToolbarItem className="containers-show-filter">
+                        <FormSelect id="containers-containers-filter" aria-label={_("Show")} value={filter} onChange={(_, value) => handleFilterChange(value as "all" | "running")}>
                             <FormSelectOption value='all' label={_("All")} />
                             <FormSelectOption value='running' label={_("Only running")} />
                         </FormSelect>
                     </ToolbarItem>
-                    <Divider orientation={{ default: "vertical" }} />
-                    <ToolbarItem className="create-action-desktop">
-                        <Button variant="secondary" key="create-new-stack-action" id="containers-containers-create-stack-btn" onClick={() => Dialogs.show(<CreateStackModal onStackCreated={refreshStacks} />)}>
-                            {_("Create stack")}
-                        </Button>
+                    <Divider className="containers-toolbar-divider" orientation={{ default: "vertical" }} />
+                    <ToolbarItem className="container-create-actions">
+                        <Flex direction={{ default: 'row' }} flexWrap={{ default: 'nowrap' }} spaceItems={{ default: 'spaceItemsXs' }}>
+                            <Button variant="secondary" key="create-new-stack-action" id="containers-containers-create-stack-btn" onClick={() => Dialogs.show(<CreateStackModal onStackCreated={refreshStacks} />)}>
+                                {_("Create stack")}
+                            </Button>
+                            <Button
+                                variant="primary"
+                                key="get-new-image-action"
+                                id="containers-containers-create-container-btn"
+                                isDisabled={localImages === null}
+                                onClick={() => createContainer()}
+                            >
+                                {_("Create container")}
+                            </Button>
+                        </Flex>
                     </ToolbarItem>
-                    <ToolbarItem className="create-action-desktop">
-                        <Button
-                            variant="primary"
-                            key="get-new-image-action"
-                            id="containers-containers-create-container-btn"
-                            isDisabled={localImages === null}
-                            onClick={() => createContainer()}
-                        >
-                            {_("Create container")}
-                        </Button>
-                    </ToolbarItem>
-                    <ToolbarItem className="create-action-mobile">
-                        <MobileCreateMenu
-                            onCreateStack={() => Dialogs.show(<CreateStackModal onStackCreated={refreshStacks} />)}
-                            onCreateContainer={() => createContainer()}
-                            isContainerDisabled={localImages === null}
-                        />
-                    </ToolbarItem>
-                    <ToolbarItem>
+                    <ToolbarItem className="containers-over-actions">
                         <ContainerOverActions
                             unusedContainers={unusedContainers}
                             handlePruneUnusedContainers={onOpenPruneUnusedContainersDialog}

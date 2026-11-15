@@ -157,11 +157,6 @@
     }
 }
 
-/* The compact create menu replaces the two wide buttons only on narrow screens. */
-.containers-containers-toolbarcontent .create-action-mobile {
-    display: none;
-}
-
 @media (max-width: 767px) {
     .content-filter {
         padding-block-end: 0;
@@ -244,12 +239,73 @@
     }
 
     .containers-containers .containers-containers-toolbarcontent {
-        .create-action-desktop {
+        display: contents;
+    }
+
+    #containers-containers > .pf-v6-c-card__header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) max-content;
+        align-items: center;
+        column-gap: var(--pf-t--global--spacer--xs);
+        row-gap: var(--pf-t--global--spacer--md);
+
+        > .pf-v6-c-card__header-main,
+        > .pf-v6-c-card__actions,
+        .pf-v6-c-toolbar,
+        .pf-v6-c-toolbar__content,
+        .pf-v6-c-toolbar__content-section {
+            display: contents;
+        }
+
+        .pf-v6-c-card__title {
+            grid-column: 1;
+            grid-row: 1;
+        }
+
+        .containers-show-label,
+        .containers-toolbar-divider {
             display: none;
         }
 
-        .create-action-mobile {
-            display: flex;
+        .containers-show-filter {
+            grid-column: 2;
+            grid-row: 1;
+            justify-self: end;
+            margin: 0;
+        }
+
+        .container-create-actions {
+            grid-column: 1;
+            grid-row: 2;
+            min-width: 0;
+            width: max-content;
+            max-width: 100%;
+            justify-self: start;
+            margin: 0;
+
+            > .pf-v6-l-flex > button {
+                padding-inline: var(--pf-t--global--spacer--md);
+            }
+        }
+
+        .container-create-actions > .pf-v6-l-flex {
+            align-items: center;
+            flex-wrap: nowrap;
+
+            #containers-containers-create-container-btn {
+                order: -1;
+            }
+
+            #containers-containers-create-stack-btn {
+                order: 1;
+            }
+        }
+
+        .containers-over-actions {
+            grid-column: 2;
+            grid-row: 2;
+            justify-self: end;
+            margin: 0;
         }
     }
 
@@ -382,6 +438,10 @@
 }
 
 @media (max-width: 360px) {
+    #containers-containers > .pf-v6-c-card__header .container-create-actions > .pf-v6-l-flex > button {
+        padding-inline: var(--pf-t--global--spacer--sm);
+    }
+
     .ct-containers-listing.pf-m-grid-md .pf-v6-c-table__td.container-name-cell {
         display: block;
     }
