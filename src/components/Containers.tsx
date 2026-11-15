@@ -687,13 +687,16 @@ const Containers = ({ containers, containersStats, images, filter, handleFilterC
         if (containerStats && status === "running") {
             const view = dockerStatsToView(containerStats);
             if (view.CPU !== undefined)
-                proc = <div className="ct-numeric-column">{`${view.CPU.toFixed(2)}%`}</div>;
+                proc = <div className="ct-numeric-column container-cpu-value">{`${view.CPU.toFixed(2)}%`}</div>;
             if (view.MemUsage !== undefined && view.MemLimit && Number.isInteger(view.MemUsage)) {
                 // the primary view is how much of the container's limit is used
                 const mem_pct = Math.round(view.MemUsage / view.MemLimit * 100);
                 const mem_items = [
-                    <span key="pct">{cockpit.format("$0%", mem_pct)}</span>,
-                    <small key="abs">{cockpit.format_bytes(view.MemUsage)}</small>
+                    <span key="primary" className="container-memory-primary">
+                        <span>{cockpit.format("$0%", mem_pct)}</span>
+                        <span className="container-memory-separator" aria-hidden="true">|</span>
+                        <small>{cockpit.format_bytes(view.MemUsage)}</small>
+                    </span>
                 ];
 
                 // is there a configured limit?
@@ -709,7 +712,7 @@ const Containers = ({ containers, containersStats, images, filter, handleFilterC
                     );
                 }
 
-                mem = <div className="container-block ct-numeric-column">{mem_items}</div>;
+                mem = <div className="container-block ct-numeric-column container-memory-value">{mem_items}</div>;
             }
         }
 
@@ -743,8 +746,8 @@ const Containers = ({ containers, containersStats, images, filter, handleFilterC
                 props: { modifier: "nowrap" },
                 sortKey: container.key,
             },
-            { title: proc, props: { modifier: "nowrap" }, sortKey: containerStats ? dockerStatsToView(containerStats).CPU ?? -1 : -1 },
-            { title: mem, props: { modifier: "nowrap" }, sortKey: containerStats ? dockerStatsToView(containerStats).MemUsage ?? -1 : -1 },
+            { title: proc, props: { modifier: "nowrap", className: "container-cpu-cell" }, sortKey: containerStats ? dockerStatsToView(containerStats).CPU ?? -1 : -1 },
+            { title: mem, props: { modifier: "nowrap", className: "container-memory-cell" }, sortKey: containerStats ? dockerStatsToView(containerStats).MemUsage ?? -1 : -1 },
             { title: <LabelGroup isVertical>{state}</LabelGroup>, sortKey: containerState },
         ];
 

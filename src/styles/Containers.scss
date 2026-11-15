@@ -27,6 +27,16 @@
     white-space: normal;
 }
 
+.container-memory-primary {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.container-memory-separator {
+    display: none;
+}
+
 .ct-containers-listing {
     width: 100%;
     min-width: 0;
@@ -211,6 +221,26 @@
         display: flex;
         justify-content: flex-end;
         align-items: flex-start;
+    }
+
+    .ct-containers-listing .container-cpu-value,
+    .ct-containers-listing .container-memory-value {
+        text-align: start;
+    }
+
+    .container-memory-primary {
+        flex-direction: row;
+        align-items: baseline;
+        gap: var(--pf-t--global--spacer--sm);
+        white-space: nowrap;
+
+        small {
+            font-size: inherit;
+        }
+    }
+
+    .container-memory-separator {
+        display: inline;
     }
 
     .containers-containers .containers-containers-toolbarcontent {
