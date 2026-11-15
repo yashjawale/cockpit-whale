@@ -37,7 +37,6 @@
 
 /* Let table rows and their content shrink within narrow cards without overflow. */
 .ct-containers-listing {
-    width: 100%;
     min-width: 0;
 
     .pf-v6-c-table__tr {
@@ -115,7 +114,7 @@
     // Allow stack cards to shrink with the containing mobile column.
     min-width: 0;
 
-    // Match the stack type label to the link color on desktop and mobile.
+    // PatternFly's link-color utility is not loaded by the Cockpit host page.
     .stack-type {
         color: var(--pf-t--global--text--color--link--default);
     }
@@ -231,12 +230,6 @@
     .ct-containers-listing.pf-m-grid-md .pf-v6-c-table__action {
         grid-column: 2 / -1;
         justify-self: end;
-    }
-
-    .ct-containers-listing.pf-m-grid-md .pf-v6-c-table__action {
-        display: flex;
-        justify-content: flex-end;
-        align-items: flex-start;
     }
 
     /* Keep numeric values readable from the left in stacked mobile table rows. */
