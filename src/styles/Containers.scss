@@ -153,6 +153,45 @@
 }
 
 @media (max-width: 767px) {
+    .content-filter {
+        padding-block-end: 0;
+
+        .pf-v6-c-toolbar {
+            padding-block-end: 0;
+        }
+    }
+
+    .content-filter .pf-v6-c-toolbar__content-section {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        row-gap: var(--pf-t--global--spacer--md);
+        margin-inline: var(--pf-t--global--spacer--lg);
+    }
+
+    .content-filter .containers-owner-label {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .content-filter .containers-owner-select {
+        grid-column: 2;
+        grid-row: 1;
+        justify-self: end;
+    }
+
+    .content-filter .containers-search {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        width: 100%;
+        min-width: 0;
+
+        .pf-v6-c-text-input-group {
+            width: 100%;
+            min-width: 0;
+        }
+    }
+
     .ct-containers-listing {
         grid-template-columns: minmax(0, 1fr);
     }
