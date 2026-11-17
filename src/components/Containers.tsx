@@ -11,7 +11,7 @@ import { Button } from "@patternfly/react-core/dist/esm/components/Button";
 import { Card, CardBody, CardHeader, CardTitle } from "@patternfly/react-core/dist/esm/components/Card";
 import { Content, ContentVariants } from "@patternfly/react-core/dist/esm/components/Content";
 import { Divider } from "@patternfly/react-core/dist/esm/components/Divider";
-import { DropdownItem } from '@patternfly/react-core/dist/esm/components/Dropdown/index.js';
+import { DropdownItem } from '@patternfly/react-core/dist/esm/components/Dropdown';
 import { FormSelect, FormSelectOption } from "@patternfly/react-core/dist/esm/components/FormSelect";
 import { LabelGroup } from "@patternfly/react-core/dist/esm/components/Label";
 import {
@@ -650,13 +650,16 @@ const Containers = ({ containers, containersStats, images, filter, handleFilterC
         if (containerStats && status === "running") {
             const view = dockerStatsToView(containerStats);
             if (view.CPU !== undefined)
-                proc = <div className="ct-numeric-column">{`${view.CPU.toFixed(2)}%`}</div>;
+                proc = <div className="ct-numeric-column container-cpu-value">{`${view.CPU.toFixed(2)}%`}</div>;
             if (view.MemUsage !== undefined && view.MemLimit && Number.isInteger(view.MemUsage)) {
                 // the primary view is how much of the container's limit is used
                 const mem_pct = Math.round(view.MemUsage / view.MemLimit * 100);
                 const mem_items = [
-                    <span key="pct">{cockpit.format("$0%", mem_pct)}</span>,
-                    <small key="abs">{cockpit.format_bytes(view.MemUsage)}</small>
+                    <span key="primary" className="container-memory-primary">
+                        <span>{cockpit.format("$0%", mem_pct)}</span>
+                        <span className="container-memory-separator" aria-hidden="true">|</span>
+                        <small>{cockpit.format_bytes(view.MemUsage)}</small>
+                    </span>
                 ];
 
                 // is there a configured limit?
@@ -672,7 +675,7 @@ const Containers = ({ containers, containersStats, images, filter, handleFilterC
                     );
                 }
 
-                mem = <div className="container-block ct-numeric-column">{mem_items}</div>;
+                mem = <div className="container-block ct-numeric-column container-memory-value">{mem_items}</div>;
             }
         }
 
@@ -700,7 +703,7 @@ const Containers = ({ containers, containersStats, images, filter, handleFilterC
         cockpit.assert(user, `User not found for container uid ${container.uid}`);
 
         const columns: ContainerRowColumn[] = [
-            { title: info_block, sortKey: container.Name ?? container.Id },
+            { title: info_block, props: { className: "container-name-cell" }, sortKey: container.Name ?? container.Id },
             {
                 title: (container.uid === 0) ? _("system") : <div><span className="ct-grey-text">{_("user:")} </span>{user.name}</div>,
                 props: { modifier: "nowrap" },
@@ -991,33 +994,33 @@ const Containers = ({ containers, containersStats, images, filter, handleFilterC
         const filterRunning = (
             <Toolbar>
                 <ToolbarContent className="containers-containers-toolbarcontent">
-                    <ToolbarItem alignSelf="center" variant="label" htmlFor="containers-containers-filter">
+                    <ToolbarItem className="containers-show-label" alignSelf="center" variant="label" htmlFor="containers-containers-filter">
                         {_("Show")}
                     </ToolbarItem>
-                    <ToolbarItem>
-                        <FormSelect id="containers-containers-filter" value={filter} onChange={(_, value) => handleFilterChange(value as "all" | "running")}>
+                    <ToolbarItem className="containers-show-filter">
+                        <FormSelect id="containers-containers-filter" aria-label={_("Show")} value={filter} onChange={(_, value) => handleFilterChange(value as "all" | "running")}>
                             <FormSelectOption value='all' label={_("All")} />
                             <FormSelectOption value='running' label={_("Only running")} />
                         </FormSelect>
                     </ToolbarItem>
-                    <Divider orientation={{ default: "vertical" }} />
-                    <ToolbarItem>
-                        <Button variant="secondary" key="create-new-stack-action" id="containers-containers-create-stack-btn" onClick={() => Dialogs.show(<CreateStackModal onStackCreated={refreshStacks} />)}>
-                            {_("Create stack")}
-                        </Button>
+                    <Divider className="containers-toolbar-divider" orientation={{ default: "vertical" }} />
+                    <ToolbarItem className="container-create-actions">
+                        <Flex direction={{ default: 'row' }} flexWrap={{ default: 'nowrap' }} spaceItems={{ default: 'spaceItemsSm' }}>
+                            <Button variant="secondary" key="create-new-stack-action" id="containers-containers-create-stack-btn" onClick={() => Dialogs.show(<CreateStackModal onStackCreated={refreshStacks} />)}>
+                                {_("Create stack")}
+                            </Button>
+                            <Button
+                                variant="primary"
+                                key="get-new-image-action"
+                                id="containers-containers-create-container-btn"
+                                isDisabled={localImages === null}
+                                onClick={() => createContainer()}
+                            >
+                                {_("Create container")}
+                            </Button>
+                        </Flex>
                     </ToolbarItem>
-                    <ToolbarItem>
-                        <Button
-                            variant="primary"
-                            key="get-new-image-action"
-                            id="containers-containers-create-container-btn"
-                            isDisabled={localImages === null}
-                            onClick={() => createContainer()}
-                        >
-                            {_("Create container")}
-                        </Button>
-                    </ToolbarItem>
-                    <ToolbarItem>
+                    <ToolbarItem className="containers-over-actions">
                         <ContainerOverActions
                             unusedContainers={unusedContainers}
                             handlePruneUnusedContainers={onOpenPruneUnusedContainersDialog}
@@ -1070,7 +1073,7 @@ const Containers = ({ containers, containersStats, images, filter, handleFilterC
                                                 <CardTitle>
                                                     <Flex justifyContent={{ default: 'justifyContentFlexStart' }}>
                                                         <h3 className='stack-name'>{section}</h3>
-                                                        <span>{_("stack")}</span>
+                                                        <span className="stack-type">{_("stack")}</span>
                                                     </Flex>
                                                 </CardTitle>
                                             </CardHeader>

@@ -43,10 +43,10 @@ const ContainerHeader = ({ users, ownerFilter, handleOwnerChanged, textFilter, h
             <ToolbarContent alignItems='baseline'>
                 { users.length >= 2 &&
                     <>
-                        <ToolbarItem variant="label">
+                        <ToolbarItem className="containers-owner-label" variant="label">
                             {_("Owner")}
                         </ToolbarItem>
-                        <ToolbarItem>
+                        <ToolbarItem className="containers-owner-select">
                             <FormSelect
                                 id="containers-containers-owner"
                                 value={ownerFilter}
@@ -63,7 +63,7 @@ const ContainerHeader = ({ users, ownerFilter, handleOwnerChanged, textFilter, h
                             </FormSelect>
                         </ToolbarItem>
                     </>}
-                <ToolbarItem>
+                <ToolbarItem className="containers-search">
                     <SearchInput
                         id="containers-filter"
                         placeholder={_("Type to filter…")}

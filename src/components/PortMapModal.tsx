@@ -11,7 +11,7 @@ import React, { useMemo, useState } from 'react';
 
 import { Alert } from "@patternfly/react-core/dist/esm/components/Alert";
 import { Content, ContentVariants } from "@patternfly/react-core/dist/esm/components/Content";
-import { DropdownItem } from '@patternfly/react-core/dist/esm/components/Dropdown/index.js';
+import { DropdownItem } from '@patternfly/react-core/dist/esm/components/Dropdown';
 import {
     Modal, ModalBody, ModalHeader
 } from '@patternfly/react-core/dist/esm/components/Modal';

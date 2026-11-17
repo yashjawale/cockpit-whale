@@ -11,7 +11,7 @@ import { Button } from "@patternfly/react-core/dist/esm/components/Button";
 import { Card, CardBody, CardFooter, CardHeader, CardTitle } from "@patternfly/react-core/dist/esm/components/Card";
 import { Content, ContentVariants } from "@patternfly/react-core/dist/esm/components/Content";
 import { Divider } from "@patternfly/react-core/dist/esm/components/Divider";
-import { DropdownItem } from '@patternfly/react-core/dist/esm/components/Dropdown/index.js';
+import { DropdownItem } from '@patternfly/react-core/dist/esm/components/Dropdown';
 import { ExpandableSection } from "@patternfly/react-core/dist/esm/components/ExpandableSection";
 import { Label } from "@patternfly/react-core/dist/esm/components/Label";
 import { Spinner } from "@patternfly/react-core/dist/esm/components/Spinner";

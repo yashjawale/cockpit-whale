@@ -12,7 +12,7 @@ import { Badge } from "@patternfly/react-core/dist/esm/components/Badge";
 import { Button } from "@patternfly/react-core/dist/esm/components/Button";
 import { Content, ContentVariants } from "@patternfly/react-core/dist/esm/components/Content";
 import { Divider } from "@patternfly/react-core/dist/esm/components/Divider";
-import { DropdownItem } from '@patternfly/react-core/dist/esm/components/Dropdown/index.js';
+import { DropdownItem } from '@patternfly/react-core/dist/esm/components/Dropdown';
 import { Flex } from "@patternfly/react-core/dist/esm/layouts/Flex";
 import { List, ListItem } from "@patternfly/react-core/dist/esm/components/List";
 import { Popover } from "@patternfly/react-core/dist/esm/components/Popover";
@@ -343,36 +343,42 @@ export const StackActions = ({ con, containers, containersStats, onAddNotificati
 
     return (
         <>
-            {containers.length > 0 && status && <Badge isRead className={`ct-badge-stack-${status}`}>{stackStatusLabels[status]}</Badge>}
-            {hasStats &&
-                <>
-                    <Flex className='pod-stat' spaceItems={{ default: 'spaceItemsSm' }}>
-                        <Tooltip content={_("CPU")}>
-                            <MicrochipIcon />
-                        </Tooltip>
-                        <Content component={ContentVariants.p} className="pf-v6-u-hidden-on-sm">{_("CPU")}</Content>
-                        <Content component={ContentVariants.p} className="pod-cpu">{cpu.toFixed(2)}%</Content>
-                    </Flex>
-                    <Flex className='pod-stat' spaceItems={{ default: 'spaceItemsSm' }}>
-                        <Tooltip content={_("Memory")}>
-                            <MemoryIcon />
-                        </Tooltip>
-                        <Content component={ContentVariants.p} className="pf-v6-u-hidden-on-sm">{_("Memory")}</Content>
-                        <Content component={ContentVariants.p} className="pod-memory">{cockpit.format_bytes(mem)}</Content>
-                    </Flex>
-                </>}
-            {ports && numPorts > 0 &&
-                <Tooltip content={_("Click to see published ports")}>
-                    <Popover
-                        enableFlip
-                        bodyContent={renderContainerPublishedPorts(ports)}
-                    >
-                        <Button size="sm" variant="link" className="pod-details-button pod-details-ports-btn" icon={<PortIcon className="pod-details-button-color" />}>
-                            {numPorts}
-                            <Content component={ContentVariants.p} className="pf-v6-u-hidden-on-sm">{_("ports")}</Content>
-                        </Button>
-                    </Popover>
-                </Tooltip>}
+            <div className="stack-summary">
+                <div className="stack-summary-heading">
+                    {containers.length > 0 && status && <Badge isRead className={`ct-badge-stack-${status}`}>{stackStatusLabels[status]}</Badge>}
+                </div>
+                <div className="stack-summary-stats">
+                    {hasStats &&
+                        <>
+                            <Flex className='pod-stat' spaceItems={{ default: 'spaceItemsSm' }}>
+                                <Tooltip content={_("CPU")}>
+                                    <MicrochipIcon />
+                                </Tooltip>
+                                <Content component={ContentVariants.p} className="pf-v6-u-hidden-on-sm">{_("CPU")}</Content>
+                                <Content component={ContentVariants.p} className="pod-cpu">{cpu.toFixed(2)}%</Content>
+                            </Flex>
+                            <Flex className='pod-stat' spaceItems={{ default: 'spaceItemsSm' }}>
+                                <Tooltip content={_("Memory")}>
+                                    <MemoryIcon />
+                                </Tooltip>
+                                <Content component={ContentVariants.p} className="pf-v6-u-hidden-on-sm">{_("Memory")}</Content>
+                                <Content component={ContentVariants.p} className="pod-memory">{cockpit.format_bytes(mem)}</Content>
+                            </Flex>
+                        </>}
+                    {ports && numPorts > 0 &&
+                        <Tooltip content={_("Click to see published ports")}>
+                            <Popover
+                                enableFlip
+                                bodyContent={renderContainerPublishedPorts(ports)}
+                            >
+                                <Button size="sm" variant="link" className="pod-details-button pod-details-ports-btn" icon={<PortIcon className="pod-details-button-color" />}>
+                                    {numPorts}
+                                    <Content component={ContentVariants.p} className="pf-v6-u-hidden-on-sm">{_("ports")}</Content>
+                                </Button>
+                            </Popover>
+                        </Tooltip>}
+                </div>
+            </div>
             <KebabDropdown toggleButtonId={`stack-actions-dropdown-${containers[0]?.Name}`} position="right" dropdownItems={dropdownItems} />
         </>
     );
