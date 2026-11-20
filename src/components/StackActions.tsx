@@ -94,7 +94,7 @@ const stackStatus = (containers: DockerContainer[]) => {
 };
 
 /**
- * Confirmation dialog removing a whole stack.
+ * Confirmation dialog taking down a stack's containers.
  */
 const StackRemoveModal = ({ containers, onRemove }: {
     containers: DockerContainer[],
@@ -109,10 +109,10 @@ const StackRemoveModal = ({ containers, onRemove }: {
             variant="medium"
             onClose={() => Dialogs.close()}
         >
-            <ModalHeader title={_("Remove stack?")} titleIconVariant="warning" />
+            <ModalHeader title={_("Take down stack?")} titleIconVariant="warning" />
             <ModalBody>
                 <Stack hasGutter>
-                    <p>{_("Removing this stack will permanently delete the following containers. Its compose files are kept, so the stack can be started again.")}</p>
+                    <p>{_("Taking down this stack will permanently delete the following containers. Its compose files are kept, so the stack can be started again.")}</p>
                     <List>
                         {containers.map(container => <ListItem key={container.Id}>{container.Name}</ListItem>)}
                     </List>
@@ -128,7 +128,7 @@ const StackRemoveModal = ({ containers, onRemove }: {
                         onRemove().catch(() => setInProgress(false));
                     }}
                 >
-                    {_("Remove")}
+                    {_("Take down")}
                 </Button>
                 <Button variant="link" isDisabled={inProgress} onClick={() => Dialogs.close()}>{_("Cancel")}</Button>
             </ModalFooter>
@@ -229,9 +229,9 @@ export const StackActions = ({ con, containers, containersStats, onAddNotificati
     };
 
     /**
-     * Remove the active stack: delete every container. The compose files are
-     * kept, so the stack reappears in the inactive stacks section where it can
-     * be started again or fully removed.
+     * Take down the active stack: delete every container. The compose files
+     * are kept, so the stack reappears in the inactive stacks section where it
+     * can be started again or fully removed.
      */
     const removeStack = (): Promise<void> => {
         const errors: string[] = [];
@@ -243,7 +243,7 @@ export const StackActions = ({ con, containers, containersStats, onAddNotificati
                     if (errors.length > 0) {
                         onAddNotification({
                             type: 'danger',
-                            error: cockpit.format(_("Failed to remove stack $0"), containers[0]?.Name ?? ""),
+                            error: cockpit.format(_("Failed to take down stack $0"), containers[0]?.Name ?? ""),
                             errorDetail: errors.join("\n"),
                         });
                     }
@@ -337,7 +337,7 @@ export const StackActions = ({ con, containers, containersStats, onAddNotificati
         );
     dropdownItems.push(
         <DropdownItem key="stack-remove" className="stack-action-remove pf-m-danger" component="button" onClick={() => Dialogs.show(<StackRemoveModal containers={containers} onRemove={removeStack} />)}>
-            {_("Remove")}
+            {_("Take down")}
         </DropdownItem>,
     );
 
