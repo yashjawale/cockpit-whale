@@ -584,13 +584,13 @@ chown -R admin:admin /home/admin/.local/share/cockpit-whale/stacks''')
             b.click(".pf-v6-c-menu__item.stack-action-start")
             b.wait_in_text("#table-test-stack .ct-badge-stack-running", "Running")
 
-            # removing the stack deletes the containers but keeps the files,
+            # taking down the stack deletes the containers but keeps the files,
             # so it moves back to the inactive stacks section
             b.click("#stack-actions-dropdown-test-stack-web-1")
             b.click(".pf-v6-c-menu__item.stack-action-remove")
             b.wait_visible(".pf-v6-c-modal-box")
-            b.wait_in_text(".pf-v6-c-modal-box", "Remove stack?")
-            b.click(".pf-v6-c-modal-box__footer button:contains('Remove')")
+            b.wait_in_text(".pf-v6-c-modal-box", "Take down stack?")
+            b.click(".pf-v6-c-modal-box__footer button:contains('Take down')")
             b.wait_not_present(".pf-v6-c-modal-box")
             # the containers are force-deleted, their removal cascades through
             # the event stream; reload for a deterministic listing
