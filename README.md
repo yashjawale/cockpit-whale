@@ -93,6 +93,8 @@ sudo apt install ./cockpit-whale_*.deb
 sudo dnf install ./cockpit-whale-*.rpm
 ```
 
+> Not available for your distro or want another packaging format? Feel free to create an issue!
+
 ## Development
 
 Install the build dependencies (`gettext`, Node.js, npm, and make; package names
