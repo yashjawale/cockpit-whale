@@ -39,6 +39,20 @@ jobs:
     trigger: pull_request
     targets: *test_targets
 
+  # Run a single-target integration test on main so the result can be shown
+  # as a stable README badge. The full target matrix remains enabled for PRs.
+  - job: copr_build
+    trigger: commit
+    branch: main$
+    targets:
+      - fedora-45
+
+  - job: tests
+    trigger: commit
+    branch: main$
+    targets:
+      - fedora-45
+
   # Build published releases in the shared cockpit-plugins COPR project.
   - job: copr_build
     trigger: release

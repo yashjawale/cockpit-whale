@@ -4,7 +4,7 @@ A simple [Cockpit](https://cockpit-project.org/) plugin for managing docker cont
 
 [![Latest release](https://img.shields.io/github/v/release/yashjawale/cockpit-whale)](https://github.com/yashjawale/cockpit-whale/releases/latest)
 [![Code checks](https://github.com/yashjawale/cockpit-whale/actions/workflows/codecheck.yml/badge.svg)](https://github.com/yashjawale/cockpit-whale/actions/workflows/codecheck.yml)
-[![Integration tests](https://img.shields.io/badge/integration%20tests-Testing%20Farm-blue)](https://github.com/yashjawale/cockpit-whale/blob/main/packit.yaml)
+[![Integration tests](https://img.shields.io/github/check-runs/yashjawale/cockpit-whale/main?nameFilter=testing-farm%3Afedora-45-x86_64&label=integration%20tests)](https://github.com/yashjawale/cockpit-whale/actions)
 [![Copr build status](https://copr.fedorainfracloud.org/coprs/yash/cockpit-plugins/package/cockpit-whale/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/yash/cockpit-plugins/package/cockpit-whale/)
 [![Ubuntu PPA](https://img.shields.io/badge/Ubuntu-PPA-E95420?logo=ubuntu&logoColor=white)](https://launchpad.net/~yashjawale/+archive/ubuntu/cockpit-plugins)
 [![build result](https://build.opensuse.org/projects/home:yashjawale/packages/cockpit-whale/badge.svg?type=default)](https://build.opensuse.org/package/show/home:yashjawale/cockpit-whale)
